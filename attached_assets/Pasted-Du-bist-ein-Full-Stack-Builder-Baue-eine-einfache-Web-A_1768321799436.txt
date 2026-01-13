@@ -1,0 +1,79 @@
+Du bist ein Full-Stack Builder. Baue eine einfache Web-App, die Reddit-Daten für ein Trainingsdataset sammelt.
+
+Ziel:
+- User gibt einen Subreddit-Namen ein (z. B. "de").
+- Die App lädt mindestens 200 Posts (Default: 200; Feld ist änderbar).
+- Es werden nur Posts ohne Bilder/Video/Gallery berücksichtigt.
+- Pro Post sammelt die App die Top 10 Kommentare (Default: 10; Feld ist änderbar, optional bis 200).
+- Am Ende kann der User ein JSON downloaden.
+
+Wichtig: Fokus nur auf Kernfunktion (Scrape → Filter → Collect → Export). Keine unnötigen Features.
+
+1) UI (eine Seite)
+- Input: Subreddit
+- Input: Anzahl Posts (Default 200)
+- Input: Kommentare pro Post (Default 10)
+- Dropdown: Post-Sort (top / new / hot), Default: top
+- Button: Start
+- Anzeige: Fortschritt (Posts gefunden X/200, Posts verarbeitet Y, Kommentare gesammelt Z)
+- Button: Download JSON (wenn fertig)
+
+2) Daten-Quelle
+- Nutze die öffentliche Reddit JSON-Struktur über .json Endpunkte (keine komplizierte User-Login-UI).
+  Beispiele:
+  - Posts: https://www.reddit.com/r/{sub}/top.json?limit=100&t=week
+  - Kommentare zu Post: https://www.reddit.com{permalink}.json?limit=500&sort=top
+- Setze einen klaren User-Agent und baue einfache Pausen ein, damit es nicht sofort blockiert.
+
+3) Filter: “keine Bilder/Media”
+Ein Post soll ausgeschlossen werden, wenn einer dieser Punkte zutrifft:
+- post_hint ist "image" oder "hosted:video" oder "rich:video" oder "gallery"
+- is_gallery == true
+- url endet auf .jpg .jpeg .png .gif .webp
+- preview oder media existieren (falls vorhanden)
+
+4) Kommentar-Sammlung
+- Sortierung: top
+- Sammle standardmäßig nur Top-Level-Kommentare (keine Threads), nimm die ersten N.
+- Überspringe Kommentare mit body "[deleted]" oder "[removed]".
+
+5) Export-JSON Format
+Export ist ein Array, pro Post ein Objekt:
+
+Variante A (sauber):
+{
+  "post": {
+    "id": "...",
+    "title": "...",
+    "selftext": "...",
+    "permalink": "...",
+    "url": "...",
+    "created_utc": 123,
+    "score": 123
+  },
+  "comments": [
+    {"rank": 1, "id": "...", "body": "...", "score": 10},
+    {"rank": 2, "id": "...", "body": "...", "score": 8}
+  ]
+}
+
+Variante B (wie der User es will, zusätzlich anbieten):
+{
+  "Post": "POST-TEXT (title + selftext oder title)",
+  "Kommentar 1": "...",
+  "Kommentar 2": "...",
+  ...
+  "Kommentar N": "..."
+}
+
+Die App soll beide Export-Modi unterstützen (Dropdown “Export Mode”: clean / flat_labels).
+
+6) Ablauf-Logik (sehr wichtig)
+- Lade Posts in Pages (limit=100) und paginiere mit "after", bis du 200 passende Posts hast (nach Filter).
+- Für jeden passenden Post: lade Kommentare, filtere deleted/removed, nimm Top N.
+- Wenn du am Ende weniger als 200 passende Posts findest, exportiere trotzdem und zeige Hinweis.
+
+7) Abgabe
+- Wichtig ist: es muss laufen und ein JSON Download erzeugen.
+
+Jetzt implementiere das.
