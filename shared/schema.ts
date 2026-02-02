@@ -3,6 +3,7 @@ import { z } from "zod";
 export const scrapeConfigSchema = z.object({
   subreddit: z.string().min(1, "Subreddit name is required"),
   postCount: z.number().min(1).max(1000).default(200),
+  skipPosts: z.number().min(0).max(5000).default(0),
   commentsPerPost: z.number().min(1).max(200).default(10),
   sortBy: z.enum(["top", "new", "hot"]).default("top"),
   exportMode: z.enum(["clean", "flat_labels"]).default("clean"),

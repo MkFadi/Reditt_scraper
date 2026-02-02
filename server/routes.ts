@@ -97,14 +97,16 @@ async function fetchPosts(
   subreddit: string,
   sortBy: string,
   targetCount: number,
+  skipCount: number,
   sendProgress: (data: Record<string, unknown>) => void
 ): Promise<RedditPost[]> {
-  const posts: RedditPost[] = [];
+  const allPosts: RedditPost[] = [];
   let after: string | null = null;
   let attempts = 0;
-  const maxAttempts = 20;
+  const maxAttempts = 100;
+  const totalNeeded = skipCount + targetCount;
 
-  while (posts.length < targetCount && attempts < maxAttempts) {
+  while (allPosts.length < totalNeeded && attempts < maxAttempts) {
     attempts++;
     let url = `https://www.reddit.com/r/${subreddit}/${sortBy}.json?limit=100`;
     if (sortBy === "top") {
@@ -126,13 +128,24 @@ async function fetchPosts(
       for (const child of children) {
         const postData = child.data;
         if (!isMediaPost(postData)) {
-          posts.push(extractPost(postData));
-          sendProgress({
-            type: "progress",
-            postsFound: posts.length,
-            message: `Found ${posts.length} text posts...`,
-          });
-          if (posts.length >= targetCount) break;
+          allPosts.push(extractPost(postData));
+          
+          const collectedAfterSkip = Math.max(0, allPosts.length - skipCount);
+          if (allPosts.length <= skipCount) {
+            sendProgress({
+              type: "progress",
+              postsFound: 0,
+              message: `Skipping posts... (${allPosts.length}/${skipCount})`,
+            });
+          } else {
+            sendProgress({
+              type: "progress",
+              postsFound: collectedAfterSkip,
+              message: `Found ${collectedAfterSkip} text posts (skipped ${skipCount})...`,
+            });
+          }
+          
+          if (allPosts.length >= totalNeeded) break;
         }
       }
 
@@ -145,7 +158,8 @@ async function fetchPosts(
     }
   }
 
-  return posts;
+  // Skip the first N posts and return the rest
+  return allPosts.slice(skipCount, skipCount + targetCount);
 }
 
 async function fetchComments(
@@ -211,9 +225,12 @@ export async function registerRoutes(
     };
 
     try {
-      sendSSE({ type: "progress", message: "Fetching posts...", postsFound: 0, postsProcessed: 0, commentsCollected: 0 });
+      const skipMessage = config.skipPosts > 0 
+        ? `Fetching posts (will skip first ${config.skipPosts})...` 
+        : "Fetching posts...";
+      sendSSE({ type: "progress", message: skipMessage, postsFound: 0, postsProcessed: 0, commentsCollected: 0 });
 
-      const posts = await fetchPosts(config.subreddit, config.sortBy, config.postCount, sendSSE);
+      const posts = await fetchPosts(config.subreddit, config.sortBy, config.postCount, config.skipPosts, sendSSE);
 
       if (posts.length === 0) {
         sendSSE({ type: "error", message: "No text posts found in this subreddit." });

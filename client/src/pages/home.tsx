@@ -32,6 +32,7 @@ export default function Home() {
     defaultValues: {
       subreddit: "",
       postCount: 200,
+      skipPosts: 0,
       commentsPerPost: 10,
       sortBy: "top",
       exportMode: "clean",
@@ -206,7 +207,7 @@ export default function Home() {
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <FormField
                     control={form.control}
                     name="postCount"
@@ -225,7 +226,32 @@ export default function Home() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Target: 1-1000 posts
+                          Target: 1-1000
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="skipPosts"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Skip Posts</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                            min={0}
+                            max={5000}
+                            disabled={isScraping}
+                            data-testid="input-skip-posts"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Skip first N posts
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -250,7 +276,7 @@ export default function Home() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Top-level only: 1-200
+                          Top-level: 1-200
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
