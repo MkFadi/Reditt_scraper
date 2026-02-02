@@ -1,6 +1,53 @@
+# Dependencies
 node_modules
+
+# Build output
 dist
-.DS_Store
 server/public
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Replit specific
+.replit
+replit.nix
+.cache
+.config
+.upm
+.local
+.npm
+*.pid
+*.seed
+
+# Vite
 vite.config.ts.*
+
+# Logs
+*.log
+npm-debug.log*
+logs
+
+# Environment files (keep secrets safe)
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Temporary files
 *.tar.gz
+tmp
+/tmp
+
+# Database files (local dev)
+*.db
+*.sqlite
+
+# Package manager locks (optional - remove if you want to track them)
+# package-lock.json
+# pnpm-lock.yaml
